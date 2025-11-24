@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Prono - Studio Rapide</title>
+    
+  
+
+    <!-- CSS NATIF (Plus rapide que Tailwind) -->
+    <style>
+        /* 1. VARIABLES & COULEURS (Palette Dark Mode) */
+        :root {
+            --bg-dark: #020617;      /* Slate 950 */
+            --bg-panel: #0f172a;     /* Slate 900 */
+            --border: #1e293b;       /* Slate 800 */
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;   /* Slate 400 */
+            
+            --emerald: #10b981;
+            --emerald-glow: rgba(16, 185, 129, 0.2);
+            --rose: #f43f5e;
+            --rose-glow: rgba(244, 63, 94, 0.2);
+            --blue: #3b82f6;
+            --blue-glow: rgba(59, 130, 246, 0.2);
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 2. LAYOUT RESPONSIVE */
+        .sidebar {
+            width: 400px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+        }
+
+        .main-preview {
+            flex: 1;
+            background-color: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05), transparent 70%),
+                url('https://grainy-gradients.vercel.app/noise.svg');
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; height: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .main-preview { padding: 40px 20px; min-height: 100vh; }
+        }
+
+        /* 3. COMPOSANTS SIDEBAR */
+        .header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .logo-box { background: linear-gradient(135deg, var(--emerald), #06b6d4); padding: 8px; border-radius: 8px; display: flex; }
+        
+        .scroll-content { flex: 1; overflow-y: auto; padding: 24px; }
+        .footer { padding: 20px; border-top: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; gap: 12px; }
+
+        .section-title {
+            font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--emerald); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+
+        .input-group { margin-bottom: 16px; }
+        .label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+        
+        input[type="text"] {
+            width: 100%; background: var(--bg-dark); border: 1px solid var(--border);
+            color: white; padding: 12px; border-radius: 8px; outline: none; transition: 0.2s;
+            font-family: inherit;
+        }
+        input[type="text"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 2px var(--emerald-glow); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+        /* Boutons de statut */
+        .btn-select {
+            background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-muted);
+            padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+        }
+        .btn-select:hover { background: #1e293b; }
+        
+        /* États actifs */
+        .btn-select.active[data-type="win"] { background: rgba(16, 185, 129, 0.1); border-color: var(--emerald); color: var(--emerald); }
+        .btn-select.active[data-type="loss"] { background: rgba(244, 63, 94, 0.1); border-color: var(--rose); color: var(--rose); }
+        .btn-select.active[data-type="pending"] { background: rgba(59, 130, 246, 0.1); border-color: var(--blue); color: var(--blue); }
+        
+        .btn-select.active[data-type="theme"] { background: #1e293b; border-color: var(--emerald); color: white; }
+
+        /* Bouton Télécharger */
+        .btn-primary {
+            width: 100%; background: linear-gradient(to right, var(--emerald), #0d9488);
+            color: white; border: none; padding: 14px; border-radius: 12px;
+            font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
+            box-shadow: 0 4px 12px var(--emerald-glow); transition: transform 0.1s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary {
+            width: 100%; background: var(--border); color: #cbd5e1; border: none;
+            padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; gap: 8px;
+        }
+
+        /* 4. LA CARTE DE PREVIEW (LE CŒUR DU DESIGN) */
+        .preview-label {
+            position: absolute; top: 20px; 
+            background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
+            padding: 6px 12px; border-radius: 20px; font-size: 10px; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; display: flex; gap: 6px;
+        }
+
+        #captureTarget {
+            width: 340px; height: 600px;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 50px -10px rgba(0,0,0,0.5);
+            transition: background 0.3s;
+        }
+
+        /* Styles dynamiques de la carte */
+        .card-neon { background: #0f172a; box-shadow: 0 0 40px var(--emerald-glow); }
+        .card-dark { background: #000000; }
+        .card-light { background: #f8fafc; }
+
+        /* Décorations */
+        .blob { position: absolute; width: 250px; height: 250px; border-radius: 50%; filter: blur(80px); opacity: 0.2; pointer-events: none; }
+        .blob-top { top: -50px; right: -50px; transition: background 0.3s; }
+        .blob-bottom { bottom: -50px; left: -50px; background: #06b6d4; opacity: 0.1; }
+
+        .texture {
+            position: absolute; inset: 0; opacity: 0.04;
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            pointer-events: none;
+        }
+
+        /* Contenu Carte */
+        .card-header { padding: 24px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
+        .brand { font-size: 24px; font-weight: 900; line-height: 1; }
+        .brand span { color: var(--emerald); }
+        .comp-badge { font-size: 10px; font-weight: 700; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+
+        .card-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; padding: 0 20px; gap: 20px; }
+        
+        .match-title { font-size: 28px; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.1; text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+
+        /* Cercle Statut */
+        .status-ring {
+            width: 100px; height: 100px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 4px solid; backdrop-filter: blur(4px);
+            transition: all 0.3s;
+        }
+
+        /* Boite Prono */
+        .prono-box {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 20px; backdrop-filter: blur(10px);
+            position: relative; overflow: hidden;
+        }
+        .vip-tag { font-size: 9px; font-weight: 800; color: var(--emerald); background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; display: inline-block; margin-bottom: 8px; }
+        .prono-text { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+        .prono-footer { display: flex; gap: 16px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 12px; }
+        .stat-item h4 { font-size: 9px; text-transform: uppercase; color: #94a3b8; margin: 0 0 2px 0; }
+        .stat-item p { font-size: 18px; font-weight: 900; margin: 0; color: var(--emerald); }
+
+        /* Footer Carte */
+        .card-footer { margin-top: auto; padding: 24px; z-index: 2; width: 100%; }
+        .result-banner {
+            width: 100%; padding: 16px; text-align: center; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
+            font-size: 16px; border-radius: 12px; color: white; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.3);
+            transition: background 0.3s;
+        }
+
+        /* Thème Light overrides */
+        .card-light .match-title { color: #0f172a; text-shadow: none; }
+        .card-light .brand { color: #0f172a; }
+        .card-light .comp-badge { border-color: #cbd5e1; color: #64748b; }
+        .card-light .prono-box { background: rgba(255,255,255,0.8); border-color: #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .card-light .prono-text { color: #0f172a; }
+        .card-light .stat-item p { color: #0f172a; }
+
+        /* Animation Loading */
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR DE CONTRÔLE -->
+    <div class="sidebar">
+        <div class="header">
+            <div class="logo-box"><i data-lucide="layers" color="white"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 16px;">Studio Créateur</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Version Turbo</div>
+            </div>
+        </div>
+
+        <div class="scroll-content">
+            <!-- INFO MATCH -->
+            <div class="section-title"><i data-lucide="type" size="14"></i> Informations Match</div>
+            
+            <div class="input-group">
+                <label class="label">Affiche du match</label>
+                <input type="text" id="inMatch" value="PSG vs MILAN" oninput="update()">
+            </div>
+            
+            <div class="grid-2 input-group">
+                <div>
+                    <label class="label">Compétition</label>
+                    <input type="text" id="inComp" value="Champions League" oninput="update()">
+                </div>
+                <div>
+                    <label class="label">Cote</label>
+                    <input type="text" id="inCote" value="2.10" oninput="update()">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="label">Ton Pronostic</label>
+                <input type="text" id="inProno" value="Victoire PSG" style="color: var(--emerald); font-weight: 700;" oninput="update()">
+            </div>
+
+            <div style="height: 1px; background: var(--border); margin: 24px 0;"></div>
+
+            <!-- DESIGN -->
+            <div class="section-title"><i data-lucide="palette" size="14"></i> Design & Résultat</div>
+
+            <div class="input-group">
+                <label class="label">Résultat</label>
+                <div class="grid-3">
+                    <div class="btn-select active" data-type="win" onclick="setStatus('win', this)">
+                        <i data-lucide="check-circle" size="16"></i> GAGNÉ
+                    </div>
+                    <div class="btn-select" data-type="loss" onclick="setStatus('loss', this)">
+                        <i data-lucide="x-circle" size="16"></i> PERDU
+                    </div>
+                    <div class="btn-select" data-type="pending" onclick="setStatus('pending', this)">
+                        <i data-lucide="clock" size="16"></i> EN COURS
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="label">Thème</label>
+                <div class="grid-3">
+                    <div class="btn-select active" data-type="theme" onclick="setTheme('neon', this)">Neon</div>
+                    <div class="btn-select" data-type="theme" onclick="setTheme('dark', this)">Dark</div>
+                    <div class="btn-select" data-type="theme" onclick="setTheme('light', this)">Light</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="btn-primary" onclick="downloadImage()" id="btnDl">
+                <i data-lucide="download" size="18"></i> <span>Télécharger HD</span>
+            </button>
+            <button class="btn-secondary" onclick="copyText()">
+                <i data-lucide="copy" size="16"></i> Copier texte Insta
+            </button>
+        </div>
+    </div>
+
+    <!-- PREVIEW AREA -->
+    <div class="main-preview">
+        <div class="preview-label"><i data-lucide="instagram" size="12"></i> Story 9:16</div>
+        
+        <!-- LA CARTE (Capture Target) -->
+        <div id="captureTarget" class="card-neon">
+            <div class="texture"></div>
+            <div class="blob blob-top" id="blobTop" style="background: var(--emerald);"></div>
+            <div class="blob blob-bottom"></div>
+
+            <div class="card-header">
+                <div class="brand">BIG<span>PRONO</span></div>
+                <div class="comp-badge" id="outComp">LDC</div>
+            </div>
+
+            <div class="card-body">
+                <div class="match-title" id="outMatch">PSG vs MILAN</div>
+
+                <div class="status-ring" id="statusRing" style="border-color: var(--emerald); background: rgba(16,185,129,0.1); color: var(--emerald);">
+                    <i data-lucide="check" size="48" id="statusIcon"></i>
+                </div>
+
+                <div class="prono-box">
+                    <div class="vip-tag">VIP</div>
+                    <div class="prono-text" id="outProno">Victoire PSG</div>
+                    <div class="prono-footer">
+                        <div class="stat-item">
+                            <h4>Cote</h4>
+                            <p id="outCote">2.10</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>Confiance</h4>
+                            <div style="display:flex; gap:2px; margin-top:4px;">
+                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
+                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
+                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
+                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
+                                <div style="width:6px; height:12px; background:#334155; border-radius:2px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="result-banner" id="banner" style="background: var(--emerald);">
+                    VALIDÉ ✅
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIQUE (Optimisée) ---
+        let state = { status: 'win', theme: 'neon' };
+
+        // Mise à jour des textes en temps réel
+        function update() {
+            document.getElementById('outMatch').innerText = document.getElementById('inMatch').value;
+            document.getElementById('outComp').innerText = document.getElementById('inComp').value;
+            document.getElementById('outCote').innerText = document.getElementById('inCote').value;
+            document.getElementById('outProno').innerText = document.getElementById('inProno').value;
+        }
+
+        // Changement de Statut
+        function setStatus(status, btn) {
+            state.status = status;
+            
+            // Gestion des boutons actifs
+            document.querySelectorAll('.btn-select[data-type="win"], .btn-select[data-type="loss"], .btn-select[data-type="pending"]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Couleurs
+            const colors = {
+                win: { color: 'var(--emerald)', bg: 'rgba(16,185,129,0.1)', text: 'VALIDÉ ✅', icon: 'check' },
+                loss: { color: 'var(--rose)', bg: 'rgba(244,63,94,0.1)', text: 'ÉCHEC ❌', icon: 'x' },
+                pending: { color: 'var(--blue)', bg: 'rgba(59,130,246,0.1)', text: 'EN COURS ⏳', icon: 'clock' }
+            };
+            const c = colors[status];
+
+            // Appliquer styles
+            const ring = document.getElementById('statusRing');
+            ring.style.borderColor = c.color;
+            ring.style.background = c.bg;
+            ring.style.color = c.color;
+            
+            // Changer icone (simple replace pour perf)
+            ring.innerHTML = `<i data-lucide="${c.icon}" size="48"></i>`;
+            
+            document.getElementById('blobTop').style.background = c.color;
+            
+            const banner = document.getElementById('banner');
+            banner.style.background = c.color;
+            banner.innerText = c.text;
+
+            lucide.createIcons();
+        }
+
+        // Changement de Thème
+        function setTheme(theme, btn) {
+            state.theme = theme;
+            document.querySelectorAll('.btn-select[data-type="theme"]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const card = document.getElementById('captureTarget');
+            card.className = `card-${theme}`;
+        }
+
+        // Téléchargement
+        function downloadImage() {
+            const btn = document.getElementById('btnDl');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Patientez...`;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                html2canvas(document.getElementById('captureTarget'), { scale: 2, backgroundColor: null }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'BigProno_Ticket.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    btn.innerHTML = originalHTML;
+                    lucide.createIcons();
+                });
+            }, 100);
+        }
+
+        // Copier texte
+        function copyText() {
+            const m = document.getElementById('inMatch').value;
+            const p = document.getElementById('inProno').value;
+            const c = document.getElementById('inCote').value;
+            const txt = `GROS MATCH ! 🔥\n\n⚽ ${m}\n💎 ${p}\n📊 Cote: ${c}\n\nLien en bio pour le VIP ! 🚀 #bigprono`;
+            navigator.clipboard.writeText(txt);
+            alert("Texte copié !");
+        }
+
+        // Init
+        lucide.createIcons();
+    </script>
+      <!-- CHARGEMENT OPTIMISÉ : Uniquement les icones et l'outil de capture -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>
