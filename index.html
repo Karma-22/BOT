@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Big Prono - Studio Creator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Big Prono - Studio</title>
     
-    <!-- 1. LIBRAIRIES LÉGÈRES -->
+    <!-- 1. CHARGEMENT SÉCURISÉ DES LIBRAIRIES -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        /* 2. DESIGN SYSTEM (Dark & Neon) */
+        /* DESIGN SYSTEM (Dark & Neon) */
         :root {
             --bg-dark: #020617;
             --bg-panel: #0f172a;
@@ -23,33 +23,35 @@
             --text-muted: #94a3b8;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
             margin: 0; background-color: var(--bg-dark); color: var(--text-main);
             height: 100vh; display: flex; overflow: hidden;
         }
 
-        /* LAYOUT */
+        /* LAYOUT RESPONSIVE */
         .sidebar {
             width: 400px; background: var(--bg-panel); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; z-index: 20; box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            height: 100%; overflow: hidden;
         }
         
         .preview-area {
             flex: 1; background: #000; position: relative;
             display: flex; align-items: center; justify-content: center;
             background-image: radial-gradient(circle at 50% 50%, #064e3b 0%, #000000 70%);
+            overflow: auto;
         }
 
         /* HEADER SIDEBAR */
-        .header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
         .icon-box { background: linear-gradient(135deg, var(--emerald), #06b6d4); padding: 8px; border-radius: 8px; display: flex; }
         .h-titles h1 { margin: 0; font-size: 16px; font-weight: 700; }
         .h-titles p { margin: 0; font-size: 11px; color: var(--text-muted); }
 
         /* SCROLL CONTENT */
-        .content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+        .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; -webkit-overflow-scrolling: touch; }
         
         .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--emerald); display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
         
@@ -70,29 +72,32 @@
             display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.2s;
         }
         
-        /* Active States */
         .btn-opt.active[data-val="win"] { background: rgba(16, 185, 129, 0.15); border-color: var(--emerald); color: var(--emerald); }
         .btn-opt.active[data-val="loss"] { background: rgba(244, 63, 94, 0.15); border-color: var(--rose); color: var(--rose); }
         .btn-opt.active[data-val="pending"] { background: rgba(59, 130, 246, 0.15); border-color: var(--blue); color: var(--blue); }
-        
         .btn-opt.active[data-type="theme"] { background: var(--emerald); color: #000; border-color: var(--emerald); }
 
         /* FOOTER ACTIONS */
-        .footer { padding: 20px; border-top: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; gap: 10px; }
+        .footer { padding: 20px; border-top: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; gap: 10px; z-index: 30; }
         
         .btn-primary {
             background: linear-gradient(to right, var(--emerald), #0d9488); border: none; color: white;
-            padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
+        .btn-primary:active { transform: scale(0.98); }
+
         .btn-secondary {
             background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-muted);
-            padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
         /* --- THE CARD (PREVIEW) --- */
         .card-container {
             width: 340px; height: 600px; position: relative; overflow: hidden;
             display: flex; flex-direction: column; transition: 0.3s;
+            flex-shrink: 0; /* Important pour mobile */
+            margin: 20px;
         }
 
         /* Themes CSS */
@@ -100,7 +105,7 @@
         .theme-dark { background: #000000; box-shadow: none; border: 1px solid #333; }
         .theme-light { background: #f8fafc; color: #0f172a; }
 
-        /* Background Pattern (CSS Pure) */
+        /* Pattern */
         .pattern {
             position: absolute; inset: 0; opacity: 0.1; pointer-events: none;
             background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px);
@@ -114,10 +119,8 @@
         .c-comp { font-size: 10px; font-weight: 700; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; text-transform: uppercase; }
 
         .c-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; z-index: 2; gap: 20px; }
-        
         .c-match { font-size: 28px; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.1; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 
-        /* Circle Status */
         .c-circle {
             width: 100px; height: 100px; border-radius: 50%; border: 4px solid;
             display: flex; align-items: center; justify-content: center;
@@ -125,7 +128,6 @@
             transition: 0.3s;
         }
 
-        /* Box Prono */
         .c-box {
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px; padding: 20px; backdrop-filter: blur(10px);
@@ -136,27 +138,23 @@
         .c-info-item h4 { margin: 0; font-size: 9px; color: #94a3b8; text-transform: uppercase; }
         .c-info-item p { margin: 2px 0 0; font-size: 16px; font-weight: 800; color: var(--emerald); }
 
-        /* Footer */
         .c-footer { padding: 24px; z-index: 2; width: 100%; margin-top: auto; }
         .c-banner {
             padding: 14px; text-align: center; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
             font-size: 14px; border-radius: 10px; color: white; transition: 0.3s;
         }
 
-        /* Theme Light Override */
-        .theme-light .c-match { color: #0f172a; text-shadow: none; }
-        .theme-light .c-comp { color: #64748b; border-color: #cbd5e1; }
-        .theme-light .c-box { background: rgba(255,255,255,0.8); border-color: #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .theme-light .c-pred { color: #0f172a; }
-        .theme-light .c-info-item p { color: #0f172a; }
-        .theme-light .c-brand { color: #0f172a; }
-
         /* Responsive Mobile */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; height: auto; }
-            .sidebar { width: 100%; box-shadow: none; height: auto; }
+            .sidebar { width: 100%; box-shadow: none; height: auto; flex-shrink: 0; }
+            .content { max-height: 400px; } /* Limite hauteur sur mobile pour voir le bouton */
             .preview-area { padding: 40px 20px; min-height: 100vh; }
         }
+        
+        /* Spinner */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
@@ -167,7 +165,7 @@
             <div class="icon-box"><i data-lucide="layers" color="white"></i></div>
             <div class="h-titles">
                 <h1>Studio Créateur</h1>
-                <p>Version Mobile Ready</p>
+                <p>Version Mobile V2 (Fix)</p>
             </div>
         </div>
 
@@ -175,7 +173,6 @@
             <!-- 1. Match Info -->
             <div>
                 <div class="section-title"><i data-lucide="type" size="12"></i> Informations</div>
-                
                 <div class="input-group">
                     <label>Affiche</label>
                     <input type="text" id="inMatch" value="PSG vs MILAN" oninput="update()">
@@ -201,30 +198,23 @@
             <!-- 2. Design -->
             <div>
                 <div class="section-title"><i data-lucide="palette" size="12"></i> Design & Statut</div>
-                
-                <div class="input-group">
-                    <label>Résultat</label>
-                    <div class="grid-3">
-                        <button class="btn-opt active" data-val="win" onclick="setStatus('win', this)"><i data-lucide="check-circle" size="14"></i> GAGNÉ</button>
-                        <button class="btn-opt" data-val="loss" onclick="setStatus('loss', this)"><i data-lucide="x-circle" size="14"></i> PERDU</button>
-                        <button class="btn-opt" data-val="pending" onclick="setStatus('pending', this)"><i data-lucide="clock" size="14"></i> COURS</button>
-                    </div>
+                <div class="grid-3">
+                    <button class="btn-opt active" data-val="win" onclick="setStatus('win', this)">GAGNÉ</button>
+                    <button class="btn-opt" data-val="loss" onclick="setStatus('loss', this)">PERDU</button>
+                    <button class="btn-opt" data-val="pending" onclick="setStatus('pending', this)">COURS</button>
                 </div>
                 <br>
-                <div class="input-group">
-                    <label>Thème</label>
-                    <div class="grid-3">
-                        <button class="btn-opt active" data-type="theme" onclick="setTheme('neon', this)">Néon</button>
-                        <button class="btn-opt" data-type="theme" onclick="setTheme('dark', this)">Dark</button>
-                        <button class="btn-opt" data-type="theme" onclick="setTheme('light', this)">Light</button>
-                    </div>
+                <div class="grid-3">
+                    <button class="btn-opt active" data-type="theme" onclick="setTheme('neon', this)">Néon</button>
+                    <button class="btn-opt" data-type="theme" onclick="setTheme('dark', this)">Dark</button>
+                    <button class="btn-opt" data-type="theme" onclick="setTheme('light', this)">Light</button>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <button class="btn-primary" onclick="handleDownload()" id="btnDl">
-                <i data-lucide="share-2" size="18"></i> <span id="dlText">Télécharger / Partager</span>
+            <button class="btn-primary" onclick="generateAndSave()" id="btnDl">
+                <i data-lucide="download" size="20"></i> <span id="dlText">TÉLÉCHARGER IMAGE</span>
             </button>
             <button class="btn-secondary" onclick="copyCaption()">
                 <i data-lucide="copy" size="16"></i> Copier texte Insta
@@ -234,62 +224,37 @@
 
     <!-- PREVIEW -->
     <div class="preview-area">
-        <!-- LA CARTE À CAPTURER -->
         <div id="captureTarget" class="card-container theme-neon">
             <div class="pattern"></div>
-            
-            <!-- Décorations de fond -->
             <div id="blob" style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--emerald); border-radius: 50%; filter: blur(80px); opacity: 0.2;"></div>
-
             <div class="c-header">
                 <div class="c-brand">BIG<span>PRONO</span></div>
                 <div class="c-comp" id="outComp">LDC</div>
             </div>
-
             <div class="c-body">
                 <div class="c-match" id="outMatch">PSG vs MILAN</div>
-
                 <div class="c-circle" id="statusCircle" style="border-color: var(--emerald); color: var(--emerald); background: rgba(16,185,129,0.1);">
                     <i data-lucide="check" size="48" id="statusIcon"></i>
                 </div>
-
                 <div class="c-box">
                     <div class="c-vip">VIP</div>
                     <div class="c-pred" id="outProno">Victoire PSG</div>
                     <div class="c-infos">
-                        <div class="c-info-item">
-                            <h4>Cote</h4>
-                            <p id="outCote">2.10</p>
-                        </div>
-                        <div class="c-info-item">
-                            <h4>Confiance</h4>
-                            <div style="display:flex; gap:2px; margin-top:6px;">
-                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
-                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
-                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
-                                <div style="width:6px; height:12px; background:var(--emerald); border-radius:2px;"></div>
-                            </div>
-                        </div>
+                        <div class="c-info-item"><h4>Cote</h4><p id="outCote">2.10</p></div>
+                        <div class="c-info-item"><h4>Confiance</h4><p>★★★★</p></div>
                     </div>
                 </div>
             </div>
-
             <div class="c-footer">
-                <div class="c-banner" id="banner" style="background: var(--emerald);">
-                    VALIDÉ ✅
-                </div>
+                <div class="c-banner" id="banner" style="background: var(--emerald);">VALIDÉ ✅</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Init Icons
         lucide.createIcons();
-
-        // STATE
         let state = { status: 'win', theme: 'neon' };
 
-        // UPDATE TEXTS
         function update() {
             document.getElementById('outMatch').innerText = document.getElementById('inMatch').value;
             document.getElementById('outComp').innerText = document.getElementById('inComp').value;
@@ -297,118 +262,118 @@
             document.getElementById('outProno').innerText = document.getElementById('inProno').value;
         }
 
-        // UPDATE STATUS
         function setStatus(status, btn) {
             state.status = status;
-            
-            // UI Buttons
             document.querySelectorAll('.btn-opt[data-val]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Logic Colors
             const colors = {
                 win: { color: 'var(--emerald)', bg: 'rgba(16,185,129,0.1)', icon: 'check', text: 'VALIDÉ ✅' },
                 loss: { color: 'var(--rose)', bg: 'rgba(244,63,94,0.1)', icon: 'x', text: 'ÉCHEC ❌' },
                 pending: { color: 'var(--blue)', bg: 'rgba(59,130,246,0.1)', icon: 'clock', text: 'EN COURS...' }
             };
             const c = colors[status];
-
-            // Apply to Elements
+            
             const circle = document.getElementById('statusCircle');
             circle.style.borderColor = c.color;
             circle.style.color = c.color;
             circle.style.background = c.bg;
             circle.innerHTML = `<i data-lucide="${c.icon}" size="48"></i>`;
-            
             document.getElementById('blob').style.background = c.color;
-            
             const banner = document.getElementById('banner');
             banner.style.background = c.color;
             banner.innerText = c.text;
-
             lucide.createIcons();
         }
 
-        // UPDATE THEME
         function setTheme(theme, btn) {
             state.theme = theme;
             document.querySelectorAll('.btn-opt[data-type="theme"]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            const card = document.getElementById('captureTarget');
-            card.className = `card-container theme-${theme}`;
+            document.getElementById('captureTarget').className = `card-container theme-${theme}`;
         }
 
-        // --- FONCTION TÉLÉCHARGEMENT MOBILE ---
-        function handleDownload() {
+        // --- ULTRA ROBUST DOWNLOAD FUNCTION ---
+        function generateAndSave() {
             const btn = document.getElementById('btnDl');
-            const originalText = document.getElementById('dlText').innerText;
+            const originalHTML = btn.innerHTML;
             
-            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Génération...`;
+            // 1. Feedback utilisateur
+            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Patientez...`;
             lucide.createIcons();
 
-            // Timeout pour laisser le DOM respirer
-            setTimeout(() => {
-                const element = document.getElementById('captureTarget');
-                
-                html2canvas(element, {
-                    scale: 2, // HD
-                    backgroundColor: null,
-                    logging: false,
-                    useCORS: true
-                }).then(canvas => {
-                    // Convertir en Blob pour le partage mobile
-                    canvas.toBlob(blob => {
-                        const file = new File([blob], `BigProno_${Date.now()}.png`, { type: 'image/png' });
+            // 2. Vérification librairie
+            if (typeof html2canvas === 'undefined') {
+                alert("Erreur: La librairie d'image n'est pas chargée. Vérifie ta connexion internet.");
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+                return;
+            }
 
-                        // 1. Essayer le Partage Natif (Android/iOS)
-                        if (navigator.share) {
+            // 3. Capture
+            const element = document.getElementById('captureTarget');
+            
+            html2canvas(element, {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            }).then(canvas => {
+                
+                // 4. Stratégie de Sauvegarde Hybride
+                try {
+                    // Méthode A: Téléchargement direct (PC & Android simple)
+                    const dataUrl = canvas.toDataURL("image/png");
+                    const filename = `BigProno_${Date.now()}.png`;
+
+                    // Si le navigateur supporte le partage de fichiers (Mobile moderne)
+                    if (navigator.canShare && navigator.share) {
+                        canvas.toBlob(blob => {
+                            const file = new File([blob], filename, { type: "image/png" });
                             navigator.share({
                                 files: [file],
-                                title: 'Big Prono Ticket',
-                                text: 'Voici mon ticket !'
-                            }).then(() => {
-                                console.log('Partagé avec succès');
-                            }).catch((error) => {
-                                console.log('Erreur de partage', error);
-                                // Fallback si le partage est annulé ou échoue
-                                saveAsFile(canvas); 
+                                title: 'Mon Ticket',
+                                text: 'Mon prono Big Prono !'
+                            }).catch((err) => {
+                                // Si l'utilisateur annule le partage, on ne fait rien ou on force le download
+                                console.log("Partage annulé, tentative de téléchargement direct.");
+                                triggerDownload(dataUrl, filename);
                             });
-                        } else {
-                            // 2. Fallback PC
-                            saveAsFile(canvas);
-                        }
-                        
-                        // Reset bouton
-                        btn.innerHTML = `<i data-lucide="share-2" size="18"></i> <span id="dlText">${originalText}</span>`;
-                        lucide.createIcons();
-                    }, 'image/png');
-                });
-            }, 500);
+                        });
+                    } else {
+                        // Méthode B: Force Download (PC / Vieux mobiles)
+                        triggerDownload(dataUrl, filename);
+                    }
+
+                } catch (err) {
+                    alert("Erreur lors de l'enregistrement : " + err.message);
+                }
+
+                // Reset bouton
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+            }).catch(err => {
+                alert("Erreur critique html2canvas : " + err);
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+            });
         }
 
-        function saveAsFile(canvas) {
+        function triggerDownload(url, filename) {
             const link = document.createElement('a');
-            link.download = `BigProno_${document.getElementById('inMatch').value.replace(/\s+/g, '_')}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.download = filename;
+            link.href = url;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
         }
 
         function copyCaption() {
-            const m = document.getElementById('inMatch').value;
-            const p = document.getElementById('inProno').value;
-            const c = document.getElementById('inCote').value;
-            const text = `Grosse session ! 🔥\n\n⚽ Match : ${m}\n💎 Prono : ${p}\n📊 Cote : ${c}\n\nLien en bio ! 🚀 #bigprono`;
-            
-            navigator.clipboard.writeText(text);
+            const txt = `Grosse session ! 🔥\n\n⚽ ${document.getElementById('inMatch').value}\n💎 ${document.getElementById('inProno').value}\n📊 Cote : ${document.getElementById('inCote').value}\n\nLien en bio ! 🚀 #bigprono`;
+            navigator.clipboard.writeText(txt);
             alert("Texte copié !");
         }
-
-        // Animation spin pour le loader
-        const styleSheet = document.createElement("style");
-        styleSheet.innerText = `@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`;
-        document.head.appendChild(styleSheet);
-
     </script>
 </body>
 </html>
