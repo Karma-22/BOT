@@ -27,34 +27,6 @@
         
         body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-        /* MODAL DE SAUVEGARDE (NOUVEAU) */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; text-align: center;
-        }
-        .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
-        
-        .modal-content {
-            max-width: 100%; max-height: 80vh; overflow: auto;
-            border-radius: 12px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.5);
-        }
-        
-        .modal-img {
-            max-width: 100%; height: auto; display: block; border-radius: 12px;
-            border: 2px solid var(--emerald);
-        }
-
-        .modal-instruction {
-            color: var(--emerald); font-weight: 700; margin-bottom: 20px; font-size: 18px;
-            animation: pulse 2s infinite; text-transform: uppercase; letter-spacing: 1px;
-        }
-
-        .close-btn {
-            margin-top: 20px; background: #334155; color: white; border: none;
-            padding: 12px 30px; border-radius: 50px; font-weight: 600; font-size: 16px; cursor: pointer;
-        }
-
         /* LAYOUT STANDARD */
         .sidebar {
             width: 400px; background: var(--bg-panel); border-right: 1px solid var(--border);
@@ -63,7 +35,7 @@
         
         .preview-area {
             flex: 1; background: #000; position: relative;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             background-image: radial-gradient(circle at 50% 50%, #064e3b 0%, #000000 70%);
             overflow: auto;
         }
@@ -160,28 +132,31 @@
             .preview-area { padding: 40px 20px; min-height: 100vh; }
         }
         
+        /* IMAGE FINALE */
+        #finalImage {
+            max-width: 100%; border: 4px solid var(--emerald);
+            border-radius: 10px; display: none; /* Caché au début */
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.5);
+        }
+
+        .success-msg {
+            display: none; color: var(--emerald); font-weight: 700; 
+            text-align: center; padding: 10px; background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px; margin-bottom: 10px; animation: pulse 2s infinite;
+        }
+
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .spin { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
 
-    <!-- MODAL POUR SAUVEGARDER -->
-    <div id="saveModal" class="modal-overlay">
-        <div class="modal-instruction">👇 Appuie longuement sur l'image pour enregistrer 👇</div>
-        <div class="modal-content">
-            <img id="generatedImage" class="modal-img" src="" alt="Ticket généré" />
-        </div>
-        <button class="close-btn" onclick="closeModal()">Fermer</button>
-    </div>
-
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="header">
             <div class="icon-box"><i data-lucide="layers" color="white"></i></div>
-            <div class="h-titles"><h1>Studio Créateur</h1><p>Mode "Save Manuel"</p></div>
+            <div class="h-titles"><h1>Studio Créateur</h1><p>Méthode "Appui Long"</p></div>
         </div>
 
         <div class="content">
@@ -222,17 +197,27 @@
         </div>
 
         <div class="footer">
-            <button class="btn-primary" onclick="showImageModal()" id="btnDl">
-                <i data-lucide="image" size="20"></i> CRÉER L'IMAGE
+            <button class="btn-primary" onclick="swapToImage()" id="btnDl">
+                <i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>
             </button>
-            <button class="btn-secondary" onclick="copyCaption()">
-                <i data-lucide="copy" size="16"></i> Copier texte Insta
+            <button class="btn-secondary" onclick="resetPreview()" id="btnReset" style="display:none;">
+                <i data-lucide="refresh-ccw" size="16"></i> Modifier
             </button>
         </div>
     </div>
 
-    <!-- PREVIEW -->
-    <div class="preview-area">
+    <!-- PREVIEW AREA -->
+    <div class="preview-area" id="previewArea">
+        
+        <!-- MESSAGE DE SUCCÈS (Visible après génération) -->
+        <div id="successMsg" class="success-msg">
+            👇 Appuie longtemps sur l'image pour l'enregistrer 👇
+        </div>
+
+        <!-- IMAGE FINALE (Cachée au début) -->
+        <img id="finalImage" alt="Ticket généré" />
+
+        <!-- CODE HTML LIVE (Caché après génération) -->
         <div id="captureTarget" class="card-container theme-neon">
             <div class="pattern"></div>
             <div id="blob" style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--emerald); border-radius: 50%; filter: blur(80px); opacity: 0.2;"></div>
@@ -294,42 +279,66 @@
             document.getElementById('captureTarget').className = `card-container theme-${theme}`;
         }
 
-        // --- MÉTHODE INFAILLIBLE : AFFICHAGE MODAL ---
-        function showImageModal() {
+        // --- LA MAGIE : ON REMPLACE LE HTML PAR UNE IMAGE ---
+        function swapToImage() {
             const btn = document.getElementById('btnDl');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Génération...`;
+            
+            // 1. Feedback
+            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Patientez...`;
             lucide.createIcons();
+            
+            // 2. Vérif
+            if(typeof html2canvas === 'undefined') {
+                alert("Erreur: Librairie non chargée. Vérifie ta connexion.");
+                btn.innerHTML = `<i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>`;
+                lucide.createIcons();
+                return;
+            }
 
-            setTimeout(() => {
-                const element = document.getElementById('captureTarget');
+            // 3. Capture
+            const element = document.getElementById('captureTarget');
+            const img = document.getElementById('finalImage');
+            const successMsg = document.getElementById('successMsg');
+            const resetBtn = document.getElementById('btnReset');
+
+            html2canvas(element, {
+                scale: 2, // HD
+                backgroundColor: null,
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                // Créer l'URL
+                const imgData = canvas.toDataURL('image/png');
                 
-                html2canvas(element, {
-                    scale: 2, 
-                    backgroundColor: null,
-                    useCORS: true,
-                    logging: false
-                }).then(canvas => {
-                    // Convertir en image base64
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    // Afficher dans le modal
-                    document.getElementById('generatedImage').src = imgData;
-                    document.getElementById('saveModal').classList.add('active');
+                // Mettre l'image dans la balise IMG
+                img.src = imgData;
+                
+                // CACHER le HTML, MONTRER l'Image
+                element.style.display = 'none';
+                img.style.display = 'block';
+                successMsg.style.display = 'block';
+                
+                // Changer les boutons
+                btn.style.display = 'none';
+                resetBtn.style.display = 'flex';
 
-                    // Reset bouton
-                    btn.innerHTML = originalHTML;
-                    lucide.createIcons();
-                }).catch(err => {
-                    alert("Erreur technique : " + err);
-                    btn.innerHTML = originalHTML;
-                    lucide.createIcons();
-                });
-            }, 500);
+            }).catch(err => {
+                alert("Erreur : " + err);
+                btn.innerHTML = `<i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>`;
+                lucide.createIcons();
+            });
         }
 
-        function closeModal() {
-            document.getElementById('saveModal').classList.remove('active');
+        function resetPreview() {
+            // On revient en arrière
+            document.getElementById('captureTarget').style.display = 'flex';
+            document.getElementById('finalImage').style.display = 'none';
+            document.getElementById('successMsg').style.display = 'none';
+            
+            document.getElementById('btnDl').style.display = 'flex';
+            document.getElementById('btnDl').innerHTML = `<i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>`;
+            document.getElementById('btnReset').style.display = 'none';
+            lucide.createIcons();
         }
 
         function copyCaption() {
