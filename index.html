@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        /* DESIGN SYSTEM */
+        /* --- DESIGN SYSTEM --- */
         :root {
             --bg-dark: #020617;
             --bg-panel: #0f172a;
@@ -27,7 +27,38 @@
         
         body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-        /* LAYOUT STANDARD */
+        /* --- MODAL DE SAUVEGARDE (STYLE POPUP) --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 10px; text-align: center; backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal-content {
+            max-width: 100%; max-height: 85vh; overflow-y: auto;
+            border-radius: 12px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        .modal-img {
+            width: 100%; height: auto; display: block; border-radius: 12px;
+            border: 2px solid var(--emerald);
+        }
+
+        .modal-instruction {
+            color: #fff; font-weight: 600; margin-bottom: 15px; font-size: 14px;
+            background: rgba(16, 185, 129, 0.2); padding: 10px; border-radius: 8px;
+            border: 1px solid var(--emerald);
+        }
+
+        .close-btn {
+            background: #fff; color: #000; border: none;
+            padding: 12px 40px; border-radius: 50px; font-weight: 800; font-size: 16px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+        }
+
+        /* --- LAYOUT STANDARD --- */
         .sidebar {
             width: 400px; background: var(--bg-panel); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; z-index: 20; box-shadow: 10px 0 30px rgba(0,0,0,0.5); height: 100%;
@@ -35,19 +66,17 @@
         
         .preview-area {
             flex: 1; background: #000; position: relative;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             background-image: radial-gradient(circle at 50% 50%, #064e3b 0%, #000000 70%);
             overflow: auto;
         }
 
-        /* HEADER & CONTENT */
         .header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
         .icon-box { background: linear-gradient(135deg, var(--emerald), #06b6d4); padding: 8px; border-radius: 8px; }
         .h-titles h1 { margin: 0; font-size: 16px; font-weight: 700; }
         .h-titles p { margin: 0; font-size: 11px; color: var(--text-muted); }
         .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         
-        /* INPUTS */
         .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--emerald); display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
         .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
         input[type="text"] {
@@ -59,7 +88,6 @@
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
-        /* BOUTONS OPTION */
         .btn-opt {
             background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-muted);
             padding: 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700;
@@ -70,7 +98,6 @@
         .btn-opt.active[data-val="pending"] { background: rgba(59, 130, 246, 0.15); border-color: var(--blue); color: var(--blue); }
         .btn-opt.active[data-type="theme"] { background: var(--emerald); color: #000; border-color: var(--emerald); }
 
-        /* FOOTER ACTIONS */
         .footer { padding: 20px; border-top: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; gap: 10px; z-index: 30; }
         
         .btn-primary {
@@ -78,12 +105,15 @@
             padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
             font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
+        .btn-primary:active { transform: scale(0.98); }
+        
         .btn-secondary {
             background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-muted);
             padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
+        .btn-secondary:active { transform: scale(0.98); background: var(--border); }
 
-        /* CARD PREVIEW */
+        /* --- CARD --- */
         .card-container {
             width: 340px; height: 600px; position: relative; overflow: hidden;
             display: flex; flex-direction: column; transition: 0.3s; flex-shrink: 0; margin: 20px;
@@ -101,19 +131,10 @@
         .c-brand { font-size: 24px; font-weight: 900; line-height: 1; }
         .c-brand span { color: var(--emerald); }
         .c-comp { font-size: 10px; font-weight: 700; padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; text-transform: uppercase; }
-
         .c-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; z-index: 2; gap: 20px; }
         .c-match { font-size: 28px; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.1; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-
-        .c-circle {
-            width: 100px; height: 100px; border-radius: 50%; border: 4px solid;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(5px);
-        }
-        .c-box {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px; padding: 20px; backdrop-filter: blur(10px);
-        }
+        .c-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); backdrop-filter: blur(5px); }
+        .c-box { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); }
         .c-vip { font-size: 9px; font-weight: 800; color: var(--emerald); background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; display: inline-block; margin-bottom: 8px; }
         .c-pred { font-size: 20px; font-weight: 800; margin-bottom: 12px; }
         .c-infos { display: flex; gap: 15px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 10px; }
@@ -121,7 +142,6 @@
         .c-info-item p { margin: 2px 0 0; font-size: 16px; font-weight: 800; color: var(--emerald); }
         .c-footer { padding: 24px; z-index: 2; width: 100%; margin-top: auto; }
         .c-banner { padding: 14px; text-align: center; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; border-radius: 10px; color: white; }
-
         .theme-light .c-match, .theme-light .c-pred, .theme-light .c-info-item p, .theme-light .c-brand { color: #0f172a; text-shadow: none; }
         .theme-light .c-comp { color: #64748b; border-color: #cbd5e1; }
         .theme-light .c-box { background: rgba(255,255,255,0.8); border-color: #cbd5e1; }
@@ -132,56 +152,47 @@
             .preview-area { padding: 40px 20px; min-height: 100vh; }
         }
         
-        /* IMAGE FINALE */
-        #finalImage {
-            max-width: 100%; border: 4px solid var(--emerald);
-            border-radius: 10px; display: none; /* Caché au début */
-            box-shadow: 0 0 50px rgba(16, 185, 129, 0.5);
-        }
-
-        .success-msg {
-            display: none; color: var(--emerald); font-weight: 700; 
-            text-align: center; padding: 10px; background: rgba(16, 185, 129, 0.1);
-            border-radius: 8px; margin-bottom: 10px; animation: pulse 2s infinite;
-        }
-
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .spin { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
 
+    <!-- MODAL DE SAUVEGARDE INFAILLIBLE -->
+    <div id="saveModal" class="modal-overlay">
+        <div class="modal-instruction">
+            👇 1. Appuie longtemps sur l'image pour Enregistrer<br>
+            📸 2. Sinon, fais une Capture d'écran
+        </div>
+        <div class="modal-content">
+            <img id="generatedImage" class="modal-img" src="" alt="Ticket généré" />
+        </div>
+        <button class="close-btn" onclick="closeModal()">FERMER</button>
+    </div>
+
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="header">
             <div class="icon-box"><i data-lucide="layers" color="white"></i></div>
-            <div class="h-titles"><h1>Studio Créateur</h1><p>Méthode "Appui Long"</p></div>
+            <div class="h-titles"><h1>Studio Créateur</h1><p>Mode Infaillible</p></div>
         </div>
 
         <div class="content">
-            <!-- 1. Match Info -->
             <div>
                 <div class="section-title"><i data-lucide="type" size="12"></i> Informations</div>
-                <div class="input-group">
-                    <label>Affiche</label>
-                    <input type="text" id="inMatch" value="PSG vs MILAN" oninput="update()">
-                </div>
+                <div class="input-group"><label>Affiche</label><input type="text" id="inMatch" value="PSG vs MILAN" oninput="update()"></div>
                 <br>
                 <div class="grid-2">
                     <div class="input-group"><label>Compétition</label><input type="text" id="inComp" value="LDC" oninput="update()"></div>
                     <div class="input-group"><label>Cote</label><input type="text" id="inCote" value="2.10" oninput="update()"></div>
                 </div>
                 <br>
-                <div class="input-group">
-                    <label>Prono</label>
-                    <input type="text" id="inProno" value="Victoire PSG" style="color:var(--emerald); font-weight:700;" oninput="update()">
-                </div>
+                <div class="input-group"><label>Prono</label><input type="text" id="inProno" value="Victoire PSG" style="color:var(--emerald); font-weight:700;" oninput="update()"></div>
             </div>
 
-            <!-- 2. Design -->
             <div>
-                <div class="section-title"><i data-lucide="palette" size="12"></i> Design & Statut</div>
+                <div class="section-title"><i data-lucide="palette" size="12"></i> Design</div>
                 <div class="grid-3">
                     <button class="btn-opt active" data-val="win" onclick="setStatus('win', this)">GAGNÉ</button>
                     <button class="btn-opt" data-val="loss" onclick="setStatus('loss', this)">PERDU</button>
@@ -197,27 +208,17 @@
         </div>
 
         <div class="footer">
-            <button class="btn-primary" onclick="swapToImage()" id="btnDl">
-                <i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>
+            <button class="btn-primary" onclick="generate()" id="btnDl">
+                <i data-lucide="image" size="20"></i> <span id="btnText">CRÉER L'IMAGE</span>
             </button>
-            <button class="btn-secondary" onclick="resetPreview()" id="btnReset" style="display:none;">
-                <i data-lucide="refresh-ccw" size="16"></i> Modifier
+            <button class="btn-secondary" onclick="copyCaption()">
+                <i data-lucide="copy" size="16"></i> COPIER TEXTE
             </button>
         </div>
     </div>
 
     <!-- PREVIEW AREA -->
-    <div class="preview-area" id="previewArea">
-        
-        <!-- MESSAGE DE SUCCÈS (Visible après génération) -->
-        <div id="successMsg" class="success-msg">
-            👇 Appuie longtemps sur l'image pour l'enregistrer 👇
-        </div>
-
-        <!-- IMAGE FINALE (Cachée au début) -->
-        <img id="finalImage" alt="Ticket généré" />
-
-        <!-- CODE HTML LIVE (Caché après génération) -->
+    <div class="preview-area">
         <div id="captureTarget" class="card-container theme-neon">
             <div class="pattern"></div>
             <div id="blob" style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--emerald); border-radius: 50%; filter: blur(80px); opacity: 0.2;"></div>
@@ -279,66 +280,32 @@
             document.getElementById('captureTarget').className = `card-container theme-${theme}`;
         }
 
-        // --- LA MAGIE : ON REMPLACE LE HTML PAR UNE IMAGE ---
-        function swapToImage() {
+        function generate() {
             const btn = document.getElementById('btnDl');
-            
-            // 1. Feedback
+            const originalHTML = btn.innerHTML;
             btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Patientez...`;
             lucide.createIcons();
-            
-            // 2. Vérif
-            if(typeof html2canvas === 'undefined') {
-                alert("Erreur: Librairie non chargée. Vérifie ta connexion.");
-                btn.innerHTML = `<i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>`;
-                lucide.createIcons();
-                return;
-            }
 
-            // 3. Capture
-            const element = document.getElementById('captureTarget');
-            const img = document.getElementById('finalImage');
-            const successMsg = document.getElementById('successMsg');
-            const resetBtn = document.getElementById('btnReset');
-
-            html2canvas(element, {
-                scale: 2, // HD
-                backgroundColor: null,
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
-                // Créer l'URL
-                const imgData = canvas.toDataURL('image/png');
+            setTimeout(() => {
+                const element = document.getElementById('captureTarget');
                 
-                // Mettre l'image dans la balise IMG
-                img.src = imgData;
-                
-                // CACHER le HTML, MONTRER l'Image
-                element.style.display = 'none';
-                img.style.display = 'block';
-                successMsg.style.display = 'block';
-                
-                // Changer les boutons
-                btn.style.display = 'none';
-                resetBtn.style.display = 'flex';
-
-            }).catch(err => {
-                alert("Erreur : " + err);
-                btn.innerHTML = `<i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>`;
-                lucide.createIcons();
-            });
+                // Scale 1.5 pour éviter les crashs sur mobile tout en gardant une qualité décente
+                html2canvas(element, { scale: 1.5, backgroundColor: null, logging: false }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    document.getElementById('generatedImage').src = imgData;
+                    document.getElementById('saveModal').classList.add('active');
+                    btn.innerHTML = originalHTML;
+                    lucide.createIcons();
+                }).catch(err => {
+                    alert("Erreur de génération : " + err);
+                    btn.innerHTML = originalHTML;
+                    lucide.createIcons();
+                });
+            }, 500);
         }
 
-        function resetPreview() {
-            // On revient en arrière
-            document.getElementById('captureTarget').style.display = 'flex';
-            document.getElementById('finalImage').style.display = 'none';
-            document.getElementById('successMsg').style.display = 'none';
-            
-            document.getElementById('btnDl').style.display = 'flex';
-            document.getElementById('btnDl').innerHTML = `<i data-lucide="image" size="20"></i> <span id="btnText">GÉNÉRER L'IMAGE</span>`;
-            document.getElementById('btnReset').style.display = 'none';
-            lucide.createIcons();
+        function closeModal() {
+            document.getElementById('saveModal').classList.remove('active');
         }
 
         function copyCaption() {
